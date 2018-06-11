@@ -30,7 +30,7 @@ jQuery(document).ready(function($) {
   }
   var selectedChannel= getQueryVariable('channel');
   if (!selectedChannel) {
-    selectedChannel = 'HD2';
+    selectedChannel = 'FM';
   }
   var s3Url = 'https://s3.amazonaws.com/wucf-playlist/'+selectedChannel+"/"+selectedDate+ '.json';
 
@@ -61,12 +61,13 @@ jQuery(document).ready(function($) {
             return data;
           }
         },
-        searchable: false
+        searchable: false,
+        defaultContent: ""
       },      
-      { data: 'Title', bSortable: false},
-      { data: 'Artist', bSortable: false},
-      { data: 'Album', bSortable: false},  
-      { data: 'Agency', bSortable: false},  
+      { data: 'Title', bSortable: false, defaultContent: ""},
+      { data: 'Artist', bSortable: false, defaultContent: ""},
+      { data: 'Album', bSortable: false, defaultContent: ""},  
+      { data: 'Agency', bSortable: false, defaultContent: ""},  
       {
         data: '',
         bSortable: false,
@@ -88,16 +89,21 @@ jQuery(document).ready(function($) {
     }
   })
   .on( 'error.dt', function ( e, settings, techNote, message ) {
-    console.log( 'An error has been reported by DataTables: ', message );
-    if (message.includes("Ajax error"))
-    {
+    if (message.includes("Ajax error")) {     
       document.getElementById('div-loader').innerHTML = "There are no playlist data for this date."
+    }
+    else if (message.includes('Requested unknown parameter', message)) {
+      // Ignore error. No need to process. Empty default values added to handle undefined parameters.
+    }
+    else {
+      console.log( 'An error has been reported by DataTables: ', message );
     }
   } );
   $('#wucf-playlist_filter label').attr( 'id', 'searchlabel');
-  //Add datepicker function to the top of filter bar.
-  var newfilterbar = 'Date: <input type="text" id="datepicker" name="datepicker"/> ';
-  newfilterbar += document.getElementById('searchlabel').innerHTML;
+  //Add datepicker and channel picker function to the top of filter bar.
+  var datefilterbar = 'Date: <input type="text" id="datepicker" name="datepicker"/> ';
+  var channelfilterbar = 'Channel: <select id="channelpicker" name="channelpicker"><option value="FM">JAZZ & MORE</option><option value="HD2">CENTRAL FLORIDA\'S CLASSICS</option></select>';
+  var newfilterbar = channelfilterbar + datefilterbar + document.getElementById('searchlabel').innerHTML;
   document.getElementById('searchlabel').innerHTML = newfilterbar;
   $( function() {
     $( "#datepicker" ).datepicker({
@@ -113,18 +119,29 @@ jQuery(document).ready(function($) {
           }
       }
     });
-    $("#datepicker").datepicker("setDate", selectedDate);
     $("#datepicker").change(function(){
       var pickedDate = moment($( "#datepicker" ).datepicker( "getDate" )).format('YYYYMMDD');
       var url = new URL(top.location.href);
       url.searchParams.set('date', pickedDate);
-      if(getQueryVariable('debug')){
-        console.log('Dateinput: '+pickedDate);
-        console.log('fullURL: ' + url );
-        console.log('updatedURL: ' + url );
-      }
       top.location.href = url;
     }); 
+    $("#channelpicker").change(function(){
+      var e = document.getElementById("channelpicker");
+      var pickedChannel = e.options[e.selectedIndex].value;
+      if (pickedChannel !== selectedChannel) {
+        var url = new URL(top.location.href);
+        url.searchParams.set('channel', pickedChannel);
+        top.location.href = url;
+      }
+    });     
+    // Set date and channel fields in the filter bar.
+    if (moment($( "#datepicker" ).datepicker( "getDate" )).format('YYYYMMDD') != selectedDate) {
+      $("#datepicker").datepicker("setDate", selectedDate);
+    }
+    var e = document.getElementById("channelpicker");
+    if (selectedChannel !== e.options[e.selectedIndex].value) {
+      $('#channelpicker').val(selectedChannel).change();
+    }
   });
   if(getQueryVariable('debug')){
     console.log('searchQuery:' + top.location.search.substring(1));
