@@ -1,0 +1,171 @@
+<!-- Jquery -->
+<script
+src="https://code.jquery.com/jquery-1.12.4.min.js"  integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ="  crossorigin="anonymous"></script>
+<script  src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU="crossorigin="anonymous"></script>
+<link rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.12.0/themes/smoothness/jquery-ui.css"> 
+<!-- MomentJS -->
+<script type="text/javascript" charset="utf8" src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment.min.js" crossorigin="anonymous"></script>
+
+<!-- Regular Datatable -->
+<link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.16/css/jquery.dataTables.css"> 
+<script type="text/javascript" charset="utf8" src="//cdn.datatables.net/1.10.16/js/jquery.dataTables.js"></script>
+
+<!-- Javascript Code -->
+<script>
+jQuery(document).ready(function($) {
+  var now = new Date();
+  function getQueryVariable(variable)  {
+    var query = top.location.search.substring(1);
+    var vars = query.split("&");
+    for (var i=0;i<vars.length;i++) {
+            var pair = vars[i].split("=");
+            if(pair[0] == variable){return pair[1];}
+    }
+    return(false);
+  }
+
+  var selectedDate= getQueryVariable('date');
+  if (!selectedDate) {
+    selectedDate = moment(now).format('YYYYMMDD');
+  }
+  var selectedChannel= getQueryVariable('channel');
+  if (!selectedChannel) {
+    selectedChannel = 'HD2';
+  }
+  var s3Url = 'https://s3.amazonaws.com/wucf-playlist/'+selectedChannel+"/"+selectedDate+ '.json';
+
+  //Datatable Error Handling so it gracefully fail.
+  $.fn.dataTable.ext.errMode = 'none';
+  $('#wucf-playlist')
+  .DataTable  ( {
+    ajax: 
+    {
+      url: s3Url,
+      dataSrc: '',
+      dataType: 'json',
+      timeout: 60000
+    },
+    columns: [
+      //{data: 'Timestamp', "visible": false, "searchable": false},
+      {data: 'Timestamp'},
+      { 
+        data: 'Timestamp',
+        render: function (data, type, row) {
+          var datetime = new Date(data);
+          var time = moment(datetime).format('LT');
+          if ( type === 'display' ) {
+              return time;
+          }
+          else
+          {
+            return data;
+          }
+        },
+        searchable: false
+      },      
+      { data: 'Title', bSortable: false},
+      { data: 'Artist', bSortable: false},
+      { data: 'Album', bSortable: false},  
+      { data: 'Agency', bSortable: false},  
+      {
+        data: '',
+        bSortable: false,
+        render: function(data, type, row, meta){
+                    var html = '<a href="';
+                            var link = 'https://www.amazon.com/s/ref=nb_sb_noss_1?tag=wucforg-20&amp;url=search-alias%3Dpopular&amp;field-keywords="';
+                    link += row.Title+'\"  \"'+row.Artist+'\"';
+                            var endhtml = '"><img src="//cdnjs.cloudflare.com/ajax/libs/simple-icons/3.0.1/amazon.svg" alt="Buy on Amazon.com">	</a>';
+                return html + encodeURI(link) + endhtml;
+            },
+        order: false
+      }
+    ],
+    bLengthChange: false,
+    iDisplayLength: 50,
+    order: [[ '0', "desc" ]],
+    language: {
+      loadingRecords: "<div id=div-loader>Loading...</div>"
+    }
+  })
+  .on( 'error.dt', function ( e, settings, techNote, message ) {
+    console.log( 'An error has been reported by DataTables: ', message );
+    if (message.includes("Ajax error"))
+    {
+      document.getElementById('div-loader').innerHTML = "There are no playlist data for this date."
+    }
+  } );
+  $('#wucf-playlist_filter label').attr( 'id', 'searchlabel');
+  //Add datepicker function to the top of filter bar.
+  var newfilterbar = 'Date: <input type="text" id="datepicker" name="datepicker"/> ';
+  newfilterbar += document.getElementById('searchlabel').innerHTML;
+  document.getElementById('searchlabel').innerHTML = newfilterbar;
+  $( function() {
+    $( "#datepicker" ).datepicker({
+      dateFormat: 'yymmdd',
+      minDate: '-1y',
+      maxDate: moment(now).format('YYYYMMDD'),
+      gotoCurrent: true,
+      showButtonPanel: true,
+      autoSize: true,
+      onSelect: function(d,i){
+          if(d !== i.lastVal){
+              $(this).change();
+          }
+      }
+    });
+    $("#datepicker").datepicker("setDate", selectedDate);
+    $("#datepicker").change(function(){
+      var pickedDate = moment($( "#datepicker" ).datepicker( "getDate" )).format('YYYYMMDD');
+      var url = new URL(top.location.href);
+      url.searchParams.set('date', pickedDate);
+      if(getQueryVariable('debug')){
+        console.log('Dateinput: '+pickedDate);
+        console.log('fullURL: ' + url );
+        console.log('updatedURL: ' + url );
+      }
+      top.location.href = url;
+    }); 
+  });
+  if(getQueryVariable('debug')){
+    console.log('searchQuery:' + top.location.search.substring(1));
+    console.log('s3Url:' + s3Url);
+    console.log('selectedDate:' + selectedDate);
+    console.log('selectedChannel:' + selectedChannel);
+    console.log('filterbar: ' + newfilterbar);
+  }
+})
+</script>
+<body>
+<style>
+  #datepicker {
+      box-sizing: content-box;
+  }
+  #searchlabel {
+      font-size: 12px;
+  }
+</style>    
+<table id="wucf-playlist" class="display" style="width:100%">
+      <thead>
+          <tr>
+              <th>Timestamp</th>             
+              <th>Time</th>                   
+              <th>Song Title</th>
+              <th>Artist</th>
+              <th>Album</th>
+              <th>Agency</th>
+              <th></th>                
+          </tr>
+      </thead>
+      <tfoot>
+          <tr>
+              <th>Timestamp</th>                
+              <th>Time</th>                
+              <th>Song Title</th>
+              <th>Artist</th>
+              <th>Album</th>   
+              <th>Agency</th>         
+              <th></th>
+          </tr>
+      </tfoot>
+  </table>
+</body>
