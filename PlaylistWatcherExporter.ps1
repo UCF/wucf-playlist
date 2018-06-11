@@ -1,4 +1,4 @@
-﻿#requires -version 2
+﻿#requires -version 4
 <#
 .SYNOPSIS
   Monitors a Padapult xml file for updates to now playing song data. Adds song data to a daily json file.
