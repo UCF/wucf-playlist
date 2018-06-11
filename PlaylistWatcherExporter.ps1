@@ -1,13 +1,31 @@
-﻿#requirements
+﻿#requires -version 2
+<#
+.SYNOPSIS
+  Monitors a Padapult xml file for updates to now playing song data. Adds song data to a daily json file.
+.DESCRIPTION
+  <Brief description of script>
+.PARAMETER <Parameter_Name>
+    <Brief description of parameter input required. Repeat this attribute if required>
+.INPUTS
+  <Inputs if any, otherwise state None>
+.OUTPUTS
+  <Outputs if any, otherwise state None - example: Log file stored in C:\Windows\Temp\<name>.log>
+.NOTES
+  Version:        1.0
+  Author:         Derek J. Bernard
+  Creation Date:  2018-06-01
+  Purpose/Change: Initial script development
+  
+.EXAMPLE
+  <Example goes here. Repeat this attribute for more than one example>
+#>
 
-#This script uses the .NET FileSystemWatcher class to monitor file events in folder(s).
-#The advantage of this method over using WMI eventing is that this can monitor sub-folders.
-#The -Action parameter can contain any valid Powershell commands.  I have just included two for example.
-#The script can be set to a wildcard filter, and IncludeSubdirectories can be changed to $true.
-#You need not subscribe to all three types of event.  All three are shown for example.
-# Version 1.1
+#---------------------------------------------------------[Initialisations]--------------------------------------------------------
 
+#Set Error Action to Silently Continue
+$ErrorActionPreference = "SilentlyContinue"
 
+#----------------------------------------------------------[Declarations]----------------------------------------------------------
 
 $watchfolder = 'C:\Path\to\watch' # Enter the root path you want to monitor.
 $filter = 'test.xml'  # You can enter a wildcard filter here.
@@ -19,9 +37,11 @@ $logPath = "C:\Path\to\output-local\log"
 $logFileNameSuffix = "$eventWatcherName-log.txt"
 $songproperties = "Group","CutID","Length","Title","Outcue","Agency","Billboard","Artist","Genre","Album","Producer","URL","Composer","Lyricist","AlbumID","SongID","StationID","StationSlogan","Timestamp"
 
-# remove any currently running 
+#-----------------------------------------------------------[Execution]------------------------------------------------------------
+
+# ensure any existing watcher is stopped and unregistered 
 Try {
-    Unregister-Event $eventWatcherName -ErrorAction SilentlyContinue
+    Unregister-Event $eventWatcherName
 }
 Catch {
     $logtimestamp = Get-Date -UFormat "%m/%d/%Y %H:%M:%S"
@@ -40,7 +60,6 @@ Try {
 
     Register-ObjectEvent $fsw Changed -SourceIdentifier $eventWatcherName -Action {
         $TodaysDate = Get-Date -UFormat "%Y%m%d"
-        Write-Host "triggered"
         $name = $Event.SourceEventArgs.Name
         $path = $Event.SourceEventArgs.FullPath
         Write-Host $path
@@ -81,4 +100,5 @@ Finally {
     $TodaysDate = Get-Date -UFormat "%Y%m%d"
     Out-File -FilePath $logpath\$TodaysDate-$logFileNameSuffix -Append -InputObject "$logtimestamp Started EventWatcher $eventWatcherName for $watchfolder\$filter"
 }
-#while($true) { sleep 5 }
+# Keep script running until killed
+while($true) { sleep 5 }
