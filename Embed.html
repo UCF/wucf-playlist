@@ -64,21 +64,22 @@ jQuery(document).ready(function($) {
         searchable: false,
         defaultContent: ""
       },      
-      { data: 'Title', bSortable: false, defaultContent: ""},
-      { data: 'Artist', bSortable: false, defaultContent: ""},
-      { data: 'Album', bSortable: false, defaultContent: ""},  
-      { data: 'Agency', bSortable: false, defaultContent: ""},  
+      { data: 'Title', bSortable: false},
+      { data: 'Artist', bSortable: false},
+      { data: 'Album', bSortable: false},  
+      { data: 'Agency', bSortable: false},  
       {
         data: '',
         bSortable: false,
         render: function(data, type, row, meta){
-                    var html = '<a href="';
+                    var html = '<a target="_blank" href="';
                             var link = 'https://www.amazon.com/s/ref=nb_sb_noss_1?tag=wucforg-20&amp;url=search-alias%3Dpopular&amp;field-keywords="';
                     link += row.Title+'\"  \"'+row.Artist+'\"';
                             var endhtml = '"><img src="//cdnjs.cloudflare.com/ajax/libs/simple-icons/3.0.1/amazon.svg" alt="Buy on Amazon.com">	</a>';
                 return html + encodeURI(link) + endhtml;
             },
-        order: false
+        order: false,
+        searchable: false
       }
     ],
     bLengthChange: false,
@@ -100,12 +101,14 @@ jQuery(document).ready(function($) {
     }
   } );
   $('#wucf-playlist_filter label').attr( 'id', 'searchlabel');
+  $('#wucf-playlist_filter input').attr( 'id', 'searchinput');
   //Add datepicker and channel picker function to the top of filter bar.
-  var datefilterbar = 'Date: <input type="text" id="datepicker" name="datepicker"/> ';
-  var channelfilterbar = 'Channel: <select id="channelpicker" name="channelpicker"><option value="FM">JAZZ & MORE</option><option value="HD2">CENTRAL FLORIDA\'S CLASSICS</option></select>';
+  var datefilterbar = ' Date: <input type="text" id="datepicker" name="datepicker"/> ';
+  var channelfilterbar = ' Channel: <select id="channelpicker" name="channelpicker"><option value="FM">JAZZ & MORE</option><option value="HD2">CENTRAL FLORIDA\'S CLASSICS</option></select> ';
   var newfilterbar = channelfilterbar + datefilterbar + document.getElementById('searchlabel').innerHTML;
   document.getElementById('searchlabel').innerHTML = newfilterbar;
   $( function() {
+    var table = $('#wucf-playlist').DataTable();
     $( "#datepicker" ).datepicker({
       dateFormat: 'yymmdd',
       minDate: '-1y',
@@ -131,9 +134,12 @@ jQuery(document).ready(function($) {
       if (pickedChannel !== selectedChannel) {
         var url = new URL(top.location.href);
         url.searchParams.set('channel', pickedChannel);
-        top.location.href = url;
+        top.location.href = url; 
       }
-    });     
+    });
+    $("#searchinput").on( 'keyup', function () {
+      table.search( this.value ).draw();
+    }); 
     // Set date and channel fields in the filter bar.
     if (moment($( "#datepicker" ).datepicker( "getDate" )).format('YYYYMMDD') != selectedDate) {
       $("#datepicker").datepicker("setDate", selectedDate);
