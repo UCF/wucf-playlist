@@ -1,7 +1,7 @@
 ﻿#requires -version 4
 <#
 .SYNOPSIS
-  Monitors a Padapult xml file for updates to now playing song data. Adds song data to a daily json file.
+  Monitors a Padapult xml file for updates to now playing song data. Adds song data to a daily json playlist file.
 .DESCRIPTION
   Monitors declared '$watchfolder' for files matching specified '$filter'. 
   When matching files are updated their data is added to a daily json playlist file.
