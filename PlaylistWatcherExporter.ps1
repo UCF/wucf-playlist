@@ -1,11 +1,31 @@
 ﻿#requires -version 4
 <#
 .SYNOPSIS
-  Monitors a Padapult xml file for updates to now playing song data. Adds song data to a daily json file.
+  Monitors a Padapult xml file for updates to now playing song data. Adds song data to a daily json playlist file.
 .DESCRIPTION
-  <Brief description of script>
+  Monitors declared '$watchfolder' for files matching specified '$filter'. 
+  When matching files are updated their data is added to a daily json playlist file.
+  The daily json playlist file is named with the date in this format: YYYYMMDD.json
+  
+  The daily json playlist file is stored in three declared locations:
+  $outputfolder:        folder mapped to production s3 bucket
+  $outputfoldertest:    folder mapped to test s3 bucket
+  $outputfolderlocal:   This is where a local copy of the Json playlist data is stored.
+                        The local daily playlist json data is read and combined with new now playing data from padapult.
+                        The combined daily playlist data is then written back to all three locations.
+                        The local output folder should be local and highly available so that play data
+                        continues to be stored even if s3 buckets are unavailable.
+                        s3 buckets can then be "caught up" with data recorded while they were unavailable.
+  
+  Description of other declared variables:
+  $eventWatcherName:    Name used to identify the File Event watcher created by this script. It should be unique to prevent collision with other watcher scripts.
+  $logPath:             Path to where the event log should be stored.
+  $logFileNameSuffix:   The filename to be appended to the current date which forms the full log filename. The prepended date (YYYYMMDD) is to facilitate log rotation.
+  $songproperties:      A comma seperated list of properties we want imported from the now playing xml data into the json playlist data. example "Title","Artist","Timestamp"
+                        IMPORTANT NOTE: "Timestamp" property is REQUIRED. It's used as a unique id for each now playing item, to prevent duplicates in the playlist.
+
 .PARAMETER <Parameter_Name>
-    <Brief description of parameter input required. Repeat this attribute if required>
+  <Brief description of parameter input required. Repeat this attribute if required>
 .INPUTS
   <Inputs if any, otherwise state None>
 .OUTPUTS
@@ -17,7 +37,10 @@
   Purpose/Change: Initial script development
   
 .EXAMPLE
-  <Example goes here. Repeat this attribute for more than one example>
+  In TaskManager:
+  powershell.exe -ExecutionPolicy Bypass C:\path\to\PlaylistWatcherExporter-HD2.ps1
+  From Explorer Manually:
+  right click script and cick run in powershell
 #>
 
 #---------------------------------------------------------[Initialisations]--------------------------------------------------------
@@ -30,8 +53,8 @@ $ErrorActionPreference = "SilentlyContinue"
 $watchfolder = 'C:\Path\to\watch' # Enter the root path you want to monitor.
 $filter = 'test.xml'  # You can enter a wildcard filter here.
 $eventWatcherName = 'TestFileChanged' # This is an ID for the watcher, it should be unique.
-$outputfolder = 'C:\Path\to\output' # output to prod destination
-$outputfoldertest = 'C:\Path\to\output-test' # output to test destination
+$outputfolder = 'C:\Path\to\s3\prod\folder' # output to prod destination
+$outputfoldertest = 'C:\Path\to\s3\test\folder' # output to test destination
 $outputfolderlocal = 'C:\Path\to\output-local' # output to local backup folder
 $logPath = "C:\Path\to\output-local\log"
 $logFileNameSuffix = "$eventWatcherName-log.txt"
