@@ -38,7 +38,7 @@
   
 .EXAMPLE
   In TaskManager:
-  powershell.exe -ExecutionPolicy Bypass C:\path\to\PlaylistWatcherExporter-HD2.ps1
+  powershell.exe -ExecutionPolicy Bypass -File C:\path\to\PlaylistWatcherExporter-HD2.ps1
   From Explorer Manually:
   right click script and cick run in powershell
 #>
@@ -70,6 +70,36 @@ $songproperties = "Group","CutID","Length","Title","Outcue","Agency","Billboard"
 # $logPath = "C:\Path\to\output-local\log"
 # $logFileNameSuffix = "$eventWatcherName-log.txt"
 # $songproperties = "Group","CutID","Length","Title","Outcue","Agency","Billboard","Artist","Genre","Album","Producer","URL","Composer","Lyricist","AlbumID","SongID","StationID","StationSlogan","Timestamp"
+
+#----------------[ Functions ]---------------------------------------------------------
+    
+}
+Function MyExampleFunction{
+  Param()
+  
+  Begin{
+    Write-Host "Start example function..."
+  }
+  
+  Process{
+    Try{
+      "Do Something here"
+    }
+    
+    Catch{
+      "Something went wrong."
+      Break
+    }
+
+  }
+  
+  End{
+    If($?){ # only execute if the function was successful.
+      Write-Host "Completed example function."
+    }
+  }
+}
+
 
 #-----------------------------------------------------------[Execution]------------------------------------------------------------
 
