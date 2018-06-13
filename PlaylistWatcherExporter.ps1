@@ -50,15 +50,26 @@ $ErrorActionPreference = "SilentlyContinue"
 
 #----------------------------------------------------------[Declarations]----------------------------------------------------------
 
-$watchfolder = 'C:\Path\to\watch' # Enter the root path you want to monitor.
-$filter = 'test.xml'  # You can enter a wildcard filter here.
-$eventWatcherName = 'TestFileChanged' # This is an ID for the watcher, it should be unique.
-$outputfolder = 'C:\Path\to\s3\prod\folder' # output to prod destination
-$outputfoldertest = 'C:\Path\to\s3\test\folder' # output to test destination
-$outputfolderlocal = 'C:\Path\to\output-local' # output to local backup folder
-$logPath = "C:\Path\to\output-local\log"
+
+$watchfolder = 'C:\Users\djbernaradmin\code\HD2XML\watch' # Enter the root path you want to monitor.
+$filter = 'HD2test.xml'  # You can enter a wildcard filter here.
+$eventWatcherName = 'HD2FileChanged'
+$outputfolder = 'C:\Users\djbernaradmin\code\HD2XML\output'
+$outputfoldertest = 'Z:\Users\djbernaradmin\code\HD2XML\output-tests'
+$outputfolderlocal = 'C:\Users\djbernaradmin\code\HD2XML\output-local'
+$logPath = "C:\Users\djbernaradmin\code\HD2XML\output-local\log"
 $logFileNameSuffix = "$eventWatcherName-log.txt"
 $songproperties = "Group","CutID","Length","Title","Outcue","Agency","Billboard","Artist","Genre","Album","Producer","URL","Composer","Lyricist","AlbumID","SongID","StationID","StationSlogan","Timestamp"
+
+# $watchfolder = 'C:\Path\to\watch' # Enter the root path you want to monitor.
+# $filter = 'test.xml'  # You can enter a wildcard filter here.
+# $eventWatcherName = 'TestFileChanged' # This is an ID for the watcher, it should be unique.
+# $outputfolder = 'C:\Path\to\s3\prod\folder' # output to prod destination
+# $outputfoldertest = 'C:\Path\to\s3\test\folder' # output to test destination
+# $outputfolderlocal = 'C:\Path\to\output-local' # output to local backup folder
+# $logPath = "C:\Path\to\output-local\log"
+# $logFileNameSuffix = "$eventWatcherName-log.txt"
+# $songproperties = "Group","CutID","Length","Title","Outcue","Agency","Billboard","Artist","Genre","Album","Producer","URL","Composer","Lyricist","AlbumID","SongID","StationID","StationSlogan","Timestamp"
 
 #-----------------------------------------------------------[Execution]------------------------------------------------------------
 
@@ -82,13 +93,13 @@ Try {
     $fsw = New-Object IO.FileSystemWatcher $watchfolder, $filter -Property @{IncludeSubdirectories = $false;NotifyFilter = [IO.NotifyFilters]'FileName, LastWrite'}
 
     Register-ObjectEvent $fsw Changed -SourceIdentifier $eventWatcherName -Action {
-        $TodaysDate = Get-Date -UFormat "%Y%m%d"
+
         $name = $Event.SourceEventArgs.Name
         $path = $Event.SourceEventArgs.FullPath
         Write-Host $path
         $changeType = $Event.SourceEventArgs.ChangeType
         $eventTimeStamp = $Event.TimeGenerated
-    
+        $TodaysDate = Get-Date -UFormat "%Y%m%d"
 
         # Get new data and append to daily json playlist
         $xmldata = [Xml] (Get-Content -Path $path)
@@ -124,4 +135,4 @@ Finally {
     Out-File -FilePath $logpath\$TodaysDate-$logFileNameSuffix -Append -InputObject "$logtimestamp Started EventWatcher $eventWatcherName for $watchfolder\$filter"
 }
 # Keep script running until killed
-while($true) { sleep 5 }
+#while($true) { sleep 5 }
