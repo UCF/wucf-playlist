@@ -5,7 +5,10 @@ src="https://code.jquery.com/jquery-1.12.4.min.js"  integrity="sha256-ZosEbRLbNQ
 <link rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.12.0/themes/smoothness/jquery-ui.css"> 
 <!-- MomentJS -->
 <script type="text/javascript" charset="utf8" src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment.min.js" crossorigin="anonymous"></script>
-
+<script
+src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.17/moment-timezone-with-data.min.js"  crossorigin="anonymous"></script>
+<script
+src="https://cdnjs.cloudflare.com/ajax/libs/jstimezonedetect/1.0.6/jstz.min.js"  crossorigin="anonymous"></script>
 <!-- Regular Datatable -->
 <link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.16/css/jquery.dataTables.css"> 
 <script type="text/javascript" charset="utf8" src="//cdn.datatables.net/1.10.16/js/jquery.dataTables.js"></script>
@@ -13,6 +16,11 @@ src="https://code.jquery.com/jquery-1.12.4.min.js"  integrity="sha256-ZosEbRLbNQ
 <!-- Javascript Code -->
 <script>
 jQuery(document).ready(function($) {
+  if (!sessionStorage.getItem('timezone')) {
+  var tz = jstz.determine() || 'UTC';
+  sessionStorage.setItem('timezone', tz.name());
+  }
+  var currTz = sessionStorage.getItem('timezone');
   var now = new Date();
   function getQueryVariable(variable)  {
     var query = top.location.search.substring(1);
@@ -26,7 +34,7 @@ jQuery(document).ready(function($) {
 
   var selectedDate= getQueryVariable('date');
   if (!selectedDate) {
-    selectedDate = moment(now).format('YYYYMMDD');
+    selectedDate = moment(now).tz(currTz).format('YYYYMMDD');
   }
   var selectedChannel= getQueryVariable('channel');
   if (!selectedChannel) {
@@ -52,7 +60,7 @@ jQuery(document).ready(function($) {
         data: 'Timestamp',
         render: function (data, type, row) {
           var datetime = new Date(data);
-          var time = moment(datetime).format('LT');
+          var time = moment(datetime).tz(currTz).format('LT');
           if ( type === 'display' ) {
               return time;
           }
@@ -112,7 +120,7 @@ jQuery(document).ready(function($) {
     $( "#datepicker" ).datepicker({
       dateFormat: 'yymmdd',
       minDate: '-1y',
-      maxDate: moment(now).format('YYYYMMDD'),
+      maxDate: moment(now).tz(currTz).format('YYYYMMDD'),
       gotoCurrent: true,
       showButtonPanel: true,
       autoSize: true,
@@ -155,6 +163,7 @@ jQuery(document).ready(function($) {
     console.log('selectedDate:' + selectedDate);
     console.log('selectedChannel:' + selectedChannel);
     console.log('filterbar: ' + newfilterbar);
+    console.log('Current Timezone: ' + currTz);
   }
 })
 </script>
