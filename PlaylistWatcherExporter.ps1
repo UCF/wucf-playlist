@@ -103,9 +103,9 @@ Try {
         $array += $jsonNowPlayingobj
         $updatedDailyPlays = $array | Sort-Object -Property TimeStamp -Unique
         $updatedDailyPlays | Write-Host
-        $updatedDailyPlays | ConvertTo-Json | Out-File $outputfolderlocal\$TodaysDate.json
-        $updatedDailyPlays | ConvertTo-Json -Compress | Out-File $outputfolder\$TodaysDate.json
-        $updatedDailyPlays | ConvertTo-Json -Compress | Out-File $outputfoldertest\$TodaysDate.json
+        $updatedDailyPlays | ConvertTo-Json | Out-File $outputfolderlocal\$TodaysDate.json -Encoding UTF8
+        $updatedDailyPlays | ConvertTo-Json -Compress | Out-File $outputfolder\$TodaysDate.json -Encoding UTF8
+        $updatedDailyPlays | ConvertTo-Json -Compress | Out-File $outputfoldertest\$TodaysDate.json -Encoding UTF8
         $songTitle = $jsonNowPlayingobj.Title
 
         # Logging Changes'
