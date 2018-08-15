@@ -82,7 +82,7 @@ jQuery(document).ready(function($) {
                     var html = '<a target="_blank" href="';
                             var link = 'https://www.amazon.com/s/ref=nb_sb_noss_1?tag=wucforg-20&amp;url=search-alias%3Dpopular&amp;field-keywords="';
                     link += row.Title+'\"  \"'+row.Artist+'\"';
-                            var endhtml = '"><img src="//cdnjs.cloudflare.com/ajax/libs/simple-icons/3.0.1/amazon.svg" alt="Buy on Amazon.com">	</a>';
+                            var endhtml = '"><img src="//cdnjs.cloudflare.com/ajax/libs/simple-icons/3.0.1/amazon.svg" alt="Buy on Amazon.com" style="max-width:32px;max-height:32px;">	</a>';
                 return html + encodeURI(link) + endhtml;
             },
         order: false,
