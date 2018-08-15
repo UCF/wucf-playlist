@@ -32,11 +32,24 @@ jQuery(document).ready(function($) {
     return(false);
   }
 
-  var selectedDate= getQueryVariable('date');
+function getParameter(paramName) {
+  var searchString = window.location.search.substring(1),
+      i, val, params = searchString.split("&");
+
+  for (i=0;i<params.length;i++) {
+    val = params[i].split("=");
+    if (val[0] == paramName) {
+      return val[1];
+    }
+  }
+  return null;
+}
+    
+  var selectedDate= getParameter('date');
   if (!selectedDate) {
     selectedDate = moment(now).tz(currTz).format('YYYYMMDD');
   }
-  var selectedChannel= getQueryVariable('channel');
+  var selectedChannel= getParameter('channel');
   if (!selectedChannel) {
     selectedChannel = 'Main';
   }
@@ -115,55 +128,74 @@ jQuery(document).ready(function($) {
   var newfilterbar = channelfilterbar + datefilterbar + document.getElementById('searchlabel').innerHTML;
   document.getElementById('searchlabel').innerHTML = newfilterbar;
   $( function() {
-    var table = $('#wucf-playlist').DataTable();
-    $( "#datepicker" ).datepicker({
-      dateFormat: 'yymmdd',
-      minDate: '-1y',
-      maxDate: moment(now).tz(currTz).format('YYYYMMDD'),
-      gotoCurrent: true,
-      showButtonPanel: true,
-      autoSize: true,
-      onSelect: function(d,i){
-          if(d !== i.lastVal){
-              $(this).change();
+   		 var table = $('#wucf-playlist').DataTable();
+      		//initiate datepicker
+            $( "#datepicker" ).datepicker({
+              dateFormat: 'yymmdd',
+              minDate: '-1y',
+              maxDate: moment(now).tz(currTz).format('YYYYMMDD'),
+              gotoCurrent: true,
+              showButtonPanel: true,
+              autoSize: true,
+              onSelect: function(d,i){
+                  if(d !== i.lastVal){
+                      $(this).change();
+                  }
+              }
+            });
+      		//datepicker change function
+            $("#datepicker").change(function(){
+              var pickedDate = moment($( "#datepicker" ).datepicker( "getDate" )).format('YYYYMMDD');
+							if(!pickedDate)
+							{
+								pickedDate = moment(now).tz(currTz).format('YYYYMMDD');
+							}
+              var e = document.getElementById("channelpicker");
+              var pickedChannel = e.options[e.selectedIndex].value;
+              s3Url = 'https://s3.amazonaws.com/wucf-playlist/'+pickedChannel+"/"+pickedDate+ '.json';
+              //url.searchParams.set('date', pickedDate);
+                table.ajax.url(s3Url).load();
+              });
+      		//channelpicker change function
+            $("#channelpicker").change(function(){
+              var e = document.getElementById("channelpicker");
+              var pickedChannel = e.options[e.selectedIndex].value;
+              if (pickedChannel !== selectedChannel) {
+									
+									selectedChannel = pickedChannel;
+                  var pickedDate = moment($( "#datepicker" ).datepicker( "getDate" )).format('YYYYMMDD');
+									if(pickedDate === "Invalid date")
+									{
+										pickedDate = moment(now).tz(currTz).format('YYYYMMDD');
+									}
+                  s3Url = 'https://s3.amazonaws.com/wucf-playlist/'+pickedChannel+"/"+pickedDate+ '.json';
+                    table.ajax.url(s3Url).load();
+              	}
+              });
+            $("#searchinput").on( 'keyup', function () {
+              table.search( this.value ).draw();
+    		// Set date and channel fields in the filter bar.
+            if (moment($( "#datepicker" ).datepicker( "getDate" )).format('YYYYMMDD') != selectedDate) {
+              $("#datepicker").datepicker("setDate", selectedDate);
+            }
+            var e = document.getElementById("channelpicker");
+            if (selectedChannel !== e.options[e.selectedIndex].value) {
+              $('#channelpicker').val(selectedChannel).change();
+            }
+          });
+		 //Reload the page every 30 seconds			
+		 setInterval( function () {
+    		table.ajax.reload( null, false ); // user paging is not reset on reload
+            }, 180000 );      		
+          if(getQueryVariable('debug')){
+            console.log('searchQuery:' + top.location.search.substring(1));
+            console.log('s3Url:' + s3Url);
+            console.log('selectedDate:' + selectedDate);
+            console.log('selectedChannel:' + selectedChannel);
+            console.log('filterbar: ' + newfilterbar);
+            console.log('Current Timezone: ' + currTz);
           }
-      }
-    });
-    $("#datepicker").change(function(){
-      var pickedDate = moment($( "#datepicker" ).datepicker( "getDate" )).format('YYYYMMDD');
-      var url = new URL(top.location.href);
-      url.searchParams.set('date', pickedDate);
-      top.location.href = url;
-    }); 
-    $("#channelpicker").change(function(){
-      var e = document.getElementById("channelpicker");
-      var pickedChannel = e.options[e.selectedIndex].value;
-      if (pickedChannel !== selectedChannel) {
-        var url = new URL(top.location.href);
-        url.searchParams.set('channel', pickedChannel);
-        top.location.href = url; 
-      }
-    });
-    $("#searchinput").on( 'keyup', function () {
-      table.search( this.value ).draw();
-    }); 
-    // Set date and channel fields in the filter bar.
-    if (moment($( "#datepicker" ).datepicker( "getDate" )).format('YYYYMMDD') != selectedDate) {
-      $("#datepicker").datepicker("setDate", selectedDate);
-    }
-    var e = document.getElementById("channelpicker");
-    if (selectedChannel !== e.options[e.selectedIndex].value) {
-      $('#channelpicker').val(selectedChannel).change();
-    }
-  });
-  if(getQueryVariable('debug')){
-    console.log('searchQuery:' + top.location.search.substring(1));
-    console.log('s3Url:' + s3Url);
-    console.log('selectedDate:' + selectedDate);
-    console.log('selectedChannel:' + selectedChannel);
-    console.log('filterbar: ' + newfilterbar);
-    console.log('Current Timezone: ' + currTz);
-  }
+       });
 })
 </script>
 <body>
