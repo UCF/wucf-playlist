@@ -93,19 +93,29 @@ Try {
         # Get new data and append to daily json playlist
         $xmldata = [Xml] (Get-Content -Path $path)
         $nowplayingobj = Select-Xml -Xml $xmldata -XPath "//NowPlaying" | Select-Object -ExpandProperty Node | Select-Object -Property $songproperties
-        Write-Host $nowplayingobj | Format-List
         $jsonNowPlaying = $nowplayingobj | ConvertTo-Json
         Write-Host $jsonNowPlaying
         $dailyplaysobj = Get-Content -Raw -Path $outputfolderlocal\$TodaysDate.json | ConvertFrom-Json
         $jsonNowPlayingobj = $jsonNowPlaying | ConvertFrom-Json
+        $strTimeStampImport = $jsonNowPlayingobj.Timestamp
+        Write-Host "Imported Timestamp: " $strTimeStampImport
+        $localutcoffset = [TimeZoneInfo]::Local.BaseUtcOffset.ToString() -replace '\:00$', ''
+        Write-Host "Local utc offset: " $localutcoffset
+        $strlocaloffsetTimeStamp = $strTimeStampImport -replace '\-\d\d\:\d\d$', $localutcoffset
+        Write-Host "Timestamp using local offset: " $strlocaloffsetTimeStamp
+        $jsonNowPlayingobj.Timestamp = $strlocaloffsetTimeStamp
+        Write-Host "Song data with updated TimeStamp: " 
+        $jsonNowPlayingobj | ConvertTo-Json | Write-Host
+
         $array = @()
         $array += $dailyplaysobj
         $array += $jsonNowPlayingobj
         $updatedDailyPlays = $array | Sort-Object -Property TimeStamp -Unique
-        $updatedDailyPlays | Write-Host
-        $updatedDailyPlays | ConvertTo-Json | Out-File $outputfolderlocal\$TodaysDate.json
-        $updatedDailyPlays | ConvertTo-Json -Compress | Out-File $outputfolder\$TodaysDate.json
-        $updatedDailyPlays | ConvertTo-Json -Compress | Out-File $outputfoldertest\$TodaysDate.json
+        Write-Host "Daily Playlist data: "
+        $updatedDailyPlays | ConvertTo-Json | Write-Host
+        $updatedDailyPlays | ConvertTo-Json | Out-File $outputfolderlocal\$TodaysDate.json -Encoding UTF8
+        $updatedDailyPlays | ConvertTo-Json -Compress | Out-File $outputfolder\$TodaysDate.json -Encoding UTF8
+        $updatedDailyPlays | ConvertTo-Json -Compress | Out-File $outputfoldertest\$TodaysDate.json -Encoding UTF8
         $songTitle = $jsonNowPlayingobj.Title
 
         # Logging Changes'
