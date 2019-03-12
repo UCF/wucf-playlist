@@ -99,7 +99,7 @@ Try {
         $jsonNowPlayingobj = $jsonNowPlaying | ConvertFrom-Json
         $strTimeStampImport = $jsonNowPlayingobj.Timestamp
         Write-Host "Imported Timestamp: " $strTimeStampImport
-        $localutcoffset = [TimeZoneInfo]::Local.BaseUtcOffset.ToString() -replace '\:00$', ''
+        $localutcoffset = [System.TimeZone]::CurrentTimeZone.GetUtcOffset([datetime]::Now).Hours.ToString() -replace '^\-(\d)', '-0$1:00'
         Write-Host "Local utc offset: " $localutcoffset
         $strlocaloffsetTimeStamp = $strTimeStampImport -replace '\-\d\d\:\d\d$', $localutcoffset
         Write-Host "Timestamp using local offset: " $strlocaloffsetTimeStamp
