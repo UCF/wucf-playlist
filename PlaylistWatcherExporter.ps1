@@ -111,6 +111,7 @@ Try {
         $array += $dailyplaysobj
         $array += $jsonNowPlayingobj
         $updatedDailyPlays = $array | Sort-Object -Property TimeStamp -Unique
+
         Write-Host "Daily Playlist data: "
         $updatedDailyPlays | ConvertTo-Json | Write-Host
         $updatedDailyPlays | ConvertTo-Json | Out-File $outputfolderlocal\$TodaysDate.json -Encoding UTF8
