@@ -41,7 +41,7 @@
   
 .EXAMPLE
   In TaskManager:
-  powershell.exe -ExecutionPolicy Bypass C:\path\to\PlaylistWatcherExporter-HD2.ps1
+  powershell.exe -ExecutionPolicy Bypass C:\path\to\MAIN-PlaylistReaderExporter.ps1
   From Explorer Manually:
   right click script and cick run in powershell
 #>
